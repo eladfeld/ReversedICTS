@@ -4,6 +4,7 @@ import argparse
 import os
 from datetime import datetime as dt
 import os
+from PIL import Image
 
 kGrowRate = 0.75
 kBridgeRate = 0
@@ -16,6 +17,16 @@ def generate_maze_to_file(x, y, num_agents, file_name):
     agent_locs = get_agent_starts_and_goals(open_cells, num_agents)
     write_to_file(x, y, maze, agent_locs, file_name)
 
+
+
+def generate_maze_from_png(png_path, num_agents, file_name):
+    os.makedirs(f'./{num_agents}agents'
+    x, y = image.size
+    maze, open_cells = get_maze_from_png(png_path)
+    agent_locs = get_agent_starts_and_goals(open_cells, num_agents)
+    file_name = f'{num_agents}agents'+png_path.replace('png','txt')
+    write_to_file(x, y, maze, agent_locs, file_name)
+    
 def get_maze(x, y, num_agents, filled_rate):
     open_cells = []
     while len(open_cells) < filled_rate * x * y:
@@ -25,6 +36,33 @@ def get_maze(x, y, num_agents, filled_rate):
         maze = grow_maze(maze, seeds, kGrowRate)
         #maze = bridge_maze(maze, kBridgeRate)
         open_cells = get_open(maze)
+    return maze, open_cells
+
+def get_maze_from_png(png_path):
+    open_cells = []
+    # Open the image and convert it to grayscale
+    image = Image.open(image_path).convert('L')
+    # Load pixel data
+    pixel_data = image.load()
+
+    result = []
+    width, height = image.size
+
+    # Iterate over each pixel and create a list of lists
+    for y in range(height):
+        row = []
+        for x in range(width):
+            # Get the pixel value
+            pixel = pixel_data[x, y]
+
+            # Check if pixel is white or not
+            if pixel == 255:
+                row.append('.')
+            else:
+                row.append('@')
+
+        result.append(row)
+    open_cells = get_open(maze)
     return maze, open_cells
         
 def get_agent_starts_and_goals(open_cells, num_agents):
