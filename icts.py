@@ -1,9 +1,9 @@
 from single_agent_planner import a_star
 from ict import IncreasingCostTree
-from mdd import MDD, find_solution_in_joint_mdd
-from map_utils import find_number_of_open_spaces
+from mdd import find_solution_in_joint_mdd
 import collections
 import time as timer
+
 
 class ICTSSolver(object):
     """A high-level ICTS search."""
@@ -19,7 +19,6 @@ class ICTSSolver(object):
         self.goals = map_details.goal_loc
         self.num_of_agents = len(map_details.goal_loc)
 
-        self.stat_tracker = PerformanceTracker("ICTS")
         self.stat_tracker.set_map_name(map_details.name)
         self.stat_tracker.set_results_file_name(map_details.result_file_name)
 
@@ -38,8 +37,18 @@ class ICTSSolver(object):
             for y, col in enumerate(row):
                 if not col:
                     for g, goal in enumerate(self.goals):
-                        h[g][(x,y)] = self.manhattan_distance((x,y), goal)
+                        h[g][(x, y)] = self.manhattan_distance((x, y), goal)
         self.heuristics = h
+
+    def find_number_of_open_spaces(map):
+        number_of_open_spaces = 0
+
+        for row in map:
+            for space in row:
+                if space is False:
+                    number_of_open_spaces = number_of_open_spaces + 1
+
+        return number_of_open_spaces
 
     def true_distance_bfs(self, my_map, goal):
         h = dict()
@@ -49,14 +58,14 @@ class ICTSSolver(object):
         visited = set()
         visited.add(goal)
         while q:
-            (x,y), this_h = q.popleft()
-            h[(x,y)] = this_h
+            (x, y), this_h = q.popleft()
+            h[(x, y)] = this_h
             children = []
             for op in indiv_ops:
-                new_child = (x+op[0], y+op[1])
+                new_child = (x + op[0], y + op[1])
                 if not my_map[new_child[0]][new_child[1]] and new_child not in visited:
                     visited.add(new_child)
-                    children.append((new_child, this_h+1))
+                    children.append((new_child, this_h + 1))
             if children:
                 q.extend(children)
         return h
@@ -78,17 +87,17 @@ class ICTSSolver(object):
         ###################################################
 
     def calculate_upper_bound_cost(self):
-        number_of_open_spaces = find_number_of_open_spaces(self.my_map)
+        number_of_open_spaces = self.find_number_of_open_spaces(self.my_map)
         upper_bound = (self.num_of_agents ** 2) * number_of_open_spaces
         return upper_bound
 
-    def bfs (self):
+    def bfs(self):
         ict = self.ict
         open_list = ict.get_open_list()
         mdd_cache = {}
         start_time = timer.time()
         nodes_expanded = 0
-        while(len(open_list) != 0):
+        while (len(open_list) != 0):
             current_node = ict.get_next_node_to_expand()
             node_cost = current_node.get_cost()
             if timer.time() - start_time > 60:
@@ -96,7 +105,7 @@ class ICTSSolver(object):
             self.print_sanity_track(start_time, nodes_expanded)
             if not self.node_has_exceeded_upper_bound(current_node, self.upper_bound):
                 solution_paths = self.find_paths_for_agents_for_given_cost(node_cost, mdd_cache)
-                if(self.solution_exists(solution_paths)):
+                if (self.solution_exists(solution_paths)):
                     return solution_paths
                 else:
                     self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())
@@ -119,15 +128,16 @@ class ICTSSolver(object):
         for i in range(len(agent_path_costs)):
             agent_depth_key = (i, agent_path_costs[i])
             if agent_depth_key not in mdd_cache:
-                agent_prev_depth_key = (i, agent_path_costs[i]-1)
+                agent_prev_depth_key = (i, agent_path_costs[i] - 1)
                 t1 = timer.time()
                 if agent_prev_depth_key in mdd_cache:
-                    new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i], last_mdd = mdd_cache[agent_prev_depth_key])
+                    new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i],
+                                  last_mdd=mdd_cache[agent_prev_depth_key])
                 else:
                     new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i])
                 t2 = timer.time()
                 mdd_cache[agent_depth_key] = new_mdd
-            else: # Already cached
+            else:  # Already cached
                 new_mdd = mdd_cache[agent_depth_key]
             mdds.append(new_mdd)
         t1 = timer.time()
@@ -157,9 +167,10 @@ class ICTSSolver(object):
     def find_most_optimal_paths(self):
         optimal_paths = []
         for agent in range(self.num_of_agents):
-            optimal_paths.append(a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent], agent, []))
+            optimal_paths.append(
+                a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent], agent, []))
         return optimal_paths
 
     def print_sanity_track(self, start_time, num_expanded):
-        elapsed = "{:.5f}".format(round(timer.time()-start_time, 5))
+        elapsed = "{:.5f}".format(round(timer.time() - start_time, 5))
         print("\r[ Time elapsed: " + elapsed + "s | Nodes expanded: " + str(num_expanded), end=" ]", flush=True)
