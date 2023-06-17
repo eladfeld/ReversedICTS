@@ -1,8 +1,7 @@
-from single_agent_planner import compute_heuristics, a_star
+from single_agent_planner import a_star
 from ict import IncreasingCostTree
 from mdd import MDD, find_solution_in_joint_mdd
 from map_utils import find_number_of_open_spaces
-from performance_tracker import PerformanceTracker
 import collections
 import time as timer
 
