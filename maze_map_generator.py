@@ -20,7 +20,7 @@ def generate_maze_to_file(x, y, num_agents, file_name):
 
 
 def generate_maze_from_png(png_path, num_agents, file_name):
-    os.makedirs(f'./{num_agents}agents'
+    os.makedirs(f'./{num_agents}agents')
     x, y = image.size
     maze, open_cells = get_maze_from_png(png_path)
     agent_locs = get_agent_starts_and_goals(open_cells, num_agents)
