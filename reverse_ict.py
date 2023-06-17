@@ -72,5 +72,5 @@ class TreeNode:
             new_costs[i] = new_costs[i] - 1
             if new_costs[i] < self.min_cost[i]:
                 continue
-            new_child = TreeNode(tuple(new_costs))
+            new_child = TreeNode(tuple(new_costs), min_cost=self.min_cost)
             self.child_nodes.append(new_child)

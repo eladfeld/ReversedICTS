@@ -129,12 +129,18 @@ class ReverseICTSSolver(object):
                     if(self.solution_exists(solution_paths)):
                         min_cost = np.sum(node_cost)
                         best_solution = solution_paths
+                        self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())
+                        self.stat_tracker.record_max('max_open_list_length', len(open_list))
+                        nodes_expanded += 1
                     else:
                         self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())
                         self.stat_tracker.record_max('max_open_list_length', len(open_list))
                         nodes_expanded += 1
                 ict.pop_next_node_to_expand()
             else:
+                self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())
+                self.stat_tracker.record_max('max_open_list_length', len(open_list))
+                nodes_expanded += 1
                 ict.pop_next_node_to_expand()
         return best_solution
 

@@ -5,12 +5,13 @@ import os
 from datetime import datetime as dt
 import os
 from PIL import Image
+from tqdm import tqdm
 
 kGrowRate = 0.75
 kBridgeRate = 0
-random.seed(dt.now())
-kFilledRate = 0.25
-kMazeDirectory = "mazes/"
+# random.seed(dt.now())
+# kFilledRate = 0.25
+# kMazeDirectory = "mazes/"
 
 
 def generate_maze_to_file(x, y, num_agents, file_name):
@@ -18,6 +19,10 @@ def generate_maze_to_file(x, y, num_agents, file_name):
     agent_locs = get_agent_starts_and_goals(open_cells, num_agents)
     write_to_file(x, y, maze, agent_locs, file_name)
 
+def generate_maze_to_file2(x, y, num_agents, kFilledRate, file_name):
+    maze, open_cells = get_maze(x, y, num_agents, kFilledRate)
+    agent_locs = get_agent_starts_and_goals(open_cells, num_agents)
+    write_to_file(x, y, maze, agent_locs, file_name)
 
 def generate_maze_from_png(png_path, num_agents):
     os.makedirs(f'./maps_{num_agents}agents', exist_ok=True)
@@ -175,10 +180,8 @@ def get_open(maze):
     return num_open
 
 
-def write_to_file(x, y, maze, agent_locs, file_name):
+def write_to_file_png(x, y, maze, agent_locs, file_name):
     full_file = file_name
-    # my_dir = os.getcwd()
-    # full_file = my_dir + "/" + kMazeDirectory + file_name
     with open(full_file, mode='w') as file:
         file.write(str(x) + " " + str(y) + '\n')
         print_maze(maze, file)
@@ -186,7 +189,15 @@ def write_to_file(x, y, maze, agent_locs, file_name):
         for line in agent_locs:
             file.write(line + '\n')
 
-
+def write_to_file(x, y, maze, agent_locs, file_name):
+    my_dir = os.getcwd()
+    full_file = my_dir + "/" + kMazeDirectory + file_name
+    with open(full_file, mode='w') as file:
+        file.write(str(x) + " " + str(y) + '\n')
+        print_maze(maze, file)
+        file.write('\n' + str(len(agent_locs)) + '\n')
+        for line in agent_locs:
+            file.write(line + '\n')
 def print_maze(maze, file):
     for x, row in enumerate(maze):
         for y, cell in enumerate(row):
@@ -197,6 +208,13 @@ def print_maze(maze, file):
 
 if __name__ == '__main__':
 
-    for png_path in os.listdir('dao_png'):
-        for num_agents in range(1, 5, 10):
-            generate_maze_from_png(os.path.join('dao_png', png_path), num_agents)
+    random.seed(42)
+    kMazeDirectory = "our_mazes/"
+
+    for n_agents in [5,10,25,50,75,100]:
+        for x,y in [(50,50), (75,75), (100,100)]:
+            #for kFilledRate in [0.10, 0.25, 0.50, 0.75, 0.90]:
+            #for kFilledRate in [0.10, 0.25, 0.50]:
+            for kFilledRate in [0.6, 0.7]:
+                print(kFilledRate)
+                generate_maze_to_file2(x, y, n_agents, kFilledRate, "maze_" + str(x) + "_" + str(y) + "_" + str(n_agents) + "_" + str(kFilledRate) + ".txt")

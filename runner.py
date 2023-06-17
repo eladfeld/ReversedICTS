@@ -9,7 +9,7 @@ import maze_map_generator
 if __name__ == '__main__':
 
     #file = 'mazes/maze12x12_3_72.txt'
-    file = 'maps_6agents/arena.txt'
+    file = 'our_mazes/maze_100_100_5_0.1.txt'
     my_map, starts, goals = import_mapf_instance(file)
     map_details = MapDetails('instance', file, my_map, starts, goals)
     start_time = time()
@@ -24,7 +24,9 @@ if __name__ == '__main__':
         paths = icts.find_solution()
     print('Time taken reverse: ', (time() - start_time) / reps)
     print(optimal_paths[0])
+    print('optimal path 0 length: ', len(optimal_paths[0]))
     print(paths[0])
+    print('path 0 length: ', len(paths[0]))
     print(optimal_paths[1])
     print(paths[1])
     print(optimal_paths[2])
