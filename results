@@ -1,0 +1,10 @@
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0011031627655029297, "time": 0.002373218536376953, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0, "time": 0.0049436092376708984, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze100x100_3_35.txt", "heuristic_time": 0.027426719665527344, "time": 3.4894044399261475, "max_joint_mdd_visited": 169}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0, "time": 0.002887725830078125, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0, "time": 0.0040130615234375, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0004792213439941406, "time": 0.0020232200622558594, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0, "time": 0.0029256343841552734, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0, "time": 0.003000974655151367, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "mazes/maze12x12_3_183.txt", "heuristic_time": 0.0010004043579101562, "time": 0.0029985904693603516, "max_joint_mdd_visited": 13}
+{"algorithm": "ICTS", "map_name": "maps_1agents/arena.txt", "heuristic_time": 1.5703604221343994, "time": 108.62498188018799, "max_joint_mdd_visited": 217}
