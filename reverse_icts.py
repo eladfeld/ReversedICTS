@@ -133,7 +133,7 @@ class ReverseICTSSolver(object):
                     solution_paths = self.find_paths_for_agents_for_given_cost(node_cost, mdd_cache)
                     if(self.solution_exists(solution_paths)):
                         # print('node costs:', node_cost)
-                        print('node cost sums:', np.sum(node_cost))
+                        #print('node cost sums:', np.sum(node_cost))
                         min_cost = np.sum(node_cost)
                         best_solution = solution_paths
                         self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())
@@ -149,6 +149,7 @@ class ReverseICTSSolver(object):
                 self.stat_tracker.record_max('max_open_list_length', len(open_list))
                 nodes_expanded += 1
                 #ict.pop_next_node_to_expand()
+        print(f'Minimum cost found: {min_cost}')
         return best_solution
 
 
@@ -191,7 +192,7 @@ class ReverseICTSSolver(object):
         return ict
 
     def create_reverse_ict(self, suboptimal_costs):
-        #suboptimal_costs = [cost+self.num_of_agents for cost in suboptimal_costs]
+        suboptimal_costs = [cost+self.num_of_agents for cost in suboptimal_costs]
         ict = ReverseIncreasingCostTree(self.my_map, self.starts, self.goals, suboptimal_costs, self.initial_estimate)
 
         return ict

@@ -33,10 +33,6 @@ class ReverseIncreasingCostTree:
         self.open_list.append(node)
 
     def add_unexplored_node_to_open_list(self, node):
-        if node.get_cost() == (50, 69, 48, 101, 110):
-            print("here")
-            if node.get_cost() in self.closed_list:
-                print("why")
         node_cost = node.get_cost()
         node_has_been_visited = node_cost in self.closed_list
 
