@@ -5,6 +5,7 @@ from map_utils import find_number_of_open_spaces
 from performance_tracker import PerformanceTracker
 import collections
 import time as timer
+import numpy as np
 
 class ICTSSolver(object):
     """A high-level ICTS search."""
@@ -98,6 +99,8 @@ class ICTSSolver(object):
             if not self.node_has_exceeded_upper_bound(current_node, self.upper_bound):
                 solution_paths = self.find_paths_for_agents_for_given_cost(node_cost, mdd_cache)
                 if(self.solution_exists(solution_paths)):
+                    print('node costs:', node_cost)
+                    print('node cost sums:', np.sum(node_cost))
                     return solution_paths
                 else:
                     self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())

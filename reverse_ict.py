@@ -24,7 +24,7 @@ class ReverseIncreasingCostTree:
         return self.open_list
 
     def get_next_node_to_expand(self):
-        return self.open_list[0]
+        return self.open_list[-1]
 
     def pop_next_node_to_expand(self):
         return self.open_list.pop()
@@ -33,6 +33,10 @@ class ReverseIncreasingCostTree:
         self.open_list.append(node)
 
     def add_unexplored_node_to_open_list(self, node):
+        if node.get_cost() == (50, 69, 48, 101, 110):
+            print("here")
+            if node.get_cost() in self.closed_list:
+                print("why")
         node_cost = node.get_cost()
         node_has_been_visited = node_cost in self.closed_list
 
@@ -41,7 +45,7 @@ class ReverseIncreasingCostTree:
             self.open_list.append(node)
 
     def expand_next_node(self):
-        next_node = self.get_next_node_to_expand()
+        next_node = self.pop_next_node_to_expand()
         next_node.expand_node()
         children = next_node.get_all_children()
         for child in children:
@@ -72,5 +76,4 @@ class TreeNode:
             new_costs[i] = new_costs[i] - 1
             if new_costs[i] < self.min_cost[i]:
                 continue
-            new_child = TreeNode(tuple(new_costs), min_cost=self.min_cost)
-            self.child_nodes.append(new_child)
+            self.add_child(tuple(new_costs))

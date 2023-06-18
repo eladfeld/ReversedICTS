@@ -66,5 +66,4 @@ class TreeNode:
 
     def expand_node(self):
         new_costs = [i+1 for i in list(copy.deepcopy(self.agent_path_costs))]
-        new_child = TreeNode(tuple(new_costs))
-        self.child_nodes.append(new_child)
+        self.add_child(tuple(new_costs))
