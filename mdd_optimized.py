@@ -66,6 +66,19 @@ class MDD:
         new_bfs_tree = self.main_bfs_loop(my_map, start, depth, fringe, prev_dict, visited)
         return new_bfs_tree
 
+    def trim_depth_d_bfs_tree(self, my_map, start, depth, old_tree):
+        fringe = deque()
+        old_fringe = list(old_tree['fringe'])
+        old_fringe.sort(key=lambda x :x[0][0]+x[0][1])
+        fringe.extend(old_fringe)
+        prev_dict = old_tree['tree']
+        for node in old_fringe:
+            node_prevs = old_tree['fringe_prevs'][node]
+            prev_dict[node].update(node_prevs)
+        visited = old_tree['visited']
+        new_bfs_tree = self.main_bfs_loop(my_map, start, depth, fringe, prev_dict, visited)
+        return new_bfs_tree
+
     def main_bfs_loop(self, my_map, start, depth, fringe, prev_dict, visited):
         depth_d_plus_one_fringe = set()
         fringe_prevs = defaultdict(set)

@@ -2,13 +2,13 @@ from single_agent_planner import compute_heuristics, a_star
 from reverse_ict import ReverseIncreasingCostTree
 from suboptimal_ict import SuboptimalIncreasingCostTree
 
-from mdd import MDD, find_solution_in_joint_mdd
+from mdd import MDD, find_solution_in_joint_mdd, is_solution_in_joint_mdd
 from map_utils import find_number_of_open_spaces
 from performance_tracker import PerformanceTracker
 import collections
 import time as timer
 import numpy as np
-
+import itertools
 class ReverseICTSSolver(object):
     """A high-level ICTS search."""
 
@@ -35,6 +35,7 @@ class ReverseICTSSolver(object):
 
         self.ict = self.stat_tracker.time("time", lambda: self.create_ict())
         self.upper_bound = self.calculate_upper_bound_cost()
+        self.possible_pairs = {}
 
     def calculate_heuristics(self):
         h = [dict() for g in range(len(self.goals))]
@@ -167,10 +168,13 @@ class ReverseICTSSolver(object):
         for i in range(len(agent_path_costs)):
             agent_depth_key = (i, agent_path_costs[i])
             if agent_depth_key not in mdd_cache:
-                agent_prev_depth_key = (i, agent_path_costs[i]-1)
+                agent_prev_depth_key_minus = (i, agent_path_costs[i]-1)
+                agent_prev_depth_key_plus = (i, agent_path_costs[i]+1)
                 t1 = timer.time()
-                if agent_prev_depth_key in mdd_cache:
-                    new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i], last_mdd = mdd_cache[agent_prev_depth_key])
+                if agent_prev_depth_key_minus in mdd_cache:
+                    new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i], last_mdd = mdd_cache[agent_prev_depth_key_minus])
+                elif agent_prev_depth_key_plus in mdd_cache:
+                    new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i], last_mdd = mdd_cache[agent_prev_depth_key_plus])
                 else:
                     new_mdd = MDD(self.my_map, i, self.starts[i], self.goals[i], agent_path_costs[i])
                 t2 = timer.time()
@@ -179,6 +183,13 @@ class ReverseICTSSolver(object):
                 new_mdd = mdd_cache[agent_depth_key]
             mdds.append(new_mdd)
         t1 = timer.time()
+        for pair in itertools.combinations([mdd.agent for mdd in mdds], 2):
+            pair = tuple(sorted(pair))
+            pair = ((agent, agent_path_costs[agent]) for agent in pair)
+            if pair not in self.possible_pairs:
+                self.possible_pairs[pair] = is_solution_in_joint_mdd([mdds[agent] for agent, cost in pair], self.stat_tracker)
+            if not self.possible_pairs[pair]:
+                return None
         solution_path = find_solution_in_joint_mdd(mdds, self.stat_tracker)
         t2 = timer.time()
         return solution_path

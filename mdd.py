@@ -16,15 +16,17 @@ class MDD:
         self.level = defaultdict(set)
         self.bfs_tree = {}
         if generate:
-            if last_mdd and last_mdd.depth < depth and last_mdd.agent == agent:
+            if last_mdd and last_mdd.agent == agent:
                 self.generate_mdd(my_map, last_mdd)  
             else: 
                 self.generate_mdd(my_map)
-            
 
-    def generate_mdd(self, my_map, last_mdd = None):
+    def generate_mdd(self, my_map, last_mdd=None):
         if last_mdd:
-            bfs_tree = self.bootstrap_depth_d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
+            if last_mdd.depth < self.depth:  # last mdd is shorter
+                bfs_tree = self.bootstrap_depth_d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
+            elif last_mdd.depth > self.depth:  # last mdd is deeper
+                bfs_tree = self.trim_depth_d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
         else:
             bfs_tree = self.get_depth_d_bfs_tree(my_map, self.start, self.depth)
         self.bfs_tree = bfs_tree
@@ -65,6 +67,38 @@ class MDD:
         visited = old_tree['visited']
         new_bfs_tree = self.main_bfs_loop(my_map, start, depth, fringe, prev_dict, visited)
         return new_bfs_tree
+
+    def trim_depth_d_bfs_tree(self, my_map, start, depth, old_tree):
+        fringe = deque()
+        old_fringe = list(old_tree['fringe'])
+        old_fringe.sort(key=lambda x: x[0][0] + x[0][1])
+
+        # Include nodes at the desired depth or less
+        fringe.extend(node for node in old_fringe if node[1] <= depth)
+
+        # Initialize new dictionaries
+        prev_dict = defaultdict(set)
+        fringe_prevs = defaultdict(set)
+        visited = set()
+        depth_d_plus_one_fringe = set()
+
+        # Iterate through old tree and copy nodes with depth less or equal to new depth
+        for node, parents in old_tree['tree'].items():
+            if node[1] <= depth:
+                prev_dict[node].update(parents)
+                visited.add(node)
+                if node[1] == depth + 1:  # not really useful in this case, but for structure consistency
+                    depth_d_plus_one_fringe.add(node)
+                    fringe_prevs[node].add(parents)
+
+        return {
+            'tree': prev_dict,
+            'visited': visited,
+            'depth': depth,
+            'fringe': fringe,
+            'fringe_prevs': fringe_prevs,
+            'depth_d_plus_one_fringe': depth_d_plus_one_fringe
+        }
 
     def main_bfs_loop(self, my_map, start, depth, fringe, prev_dict, visited):
         depth_d_plus_one_fringe = set()
