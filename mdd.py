@@ -3,7 +3,8 @@
 from collections import deque
 from collections import defaultdict
 import itertools
-
+import time
+import numpy as np
 class MDD:
     def __init__(self, my_map, agent, start, goal, depth, generate = True, last_mdd = None):
         """ Note that in order to save memory, we do not store the map on each
@@ -23,10 +24,12 @@ class MDD:
 
     def generate_mdd(self, my_map, last_mdd=None):
         if last_mdd:
-            if last_mdd.depth < self.depth:  # last mdd is shorter
+            if last_mdd.depth == self.depth - 1:
                 bfs_tree = self.bootstrap_depth_d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
-            elif last_mdd.depth > self.depth:  # last mdd is deeper
-                bfs_tree = self.trim_depth_d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
+            else:
+                bfs_tree = self.bootstrap_depth_5d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
+            # elif last_mdd.depth > self.depth:  # last mdd is deeper
+            #     bfs_tree = self.trim_depth_d_bfs_tree(my_map, self.start, self.depth, last_mdd.bfs_tree)
         else:
             bfs_tree = self.get_depth_d_bfs_tree(my_map, self.start, self.depth)
         self.bfs_tree = bfs_tree
@@ -68,37 +71,31 @@ class MDD:
         new_bfs_tree = self.main_bfs_loop(my_map, start, depth, fringe, prev_dict, visited)
         return new_bfs_tree
 
-    def trim_depth_d_bfs_tree(self, my_map, start, depth, old_tree):
-        fringe = deque()
-        old_fringe = list(old_tree['fringe'])
-        old_fringe.sort(key=lambda x: x[0][0] + x[0][1])
+    def bootstrap_depth_5d_bfs_tree(self, my_map, start, depth, old_tree):
+        for _ in range(5):
+            old_tree = self.bootstrap_depth_d_bfs_tree(my_map, start, depth, old_tree)
+            depth += 1
+        return old_tree
 
-        # Include nodes at the desired depth or less
-        fringe.extend(node for node in old_fringe if node[1] <= depth)
-
-        # Initialize new dictionaries
-        prev_dict = defaultdict(set)
-        fringe_prevs = defaultdict(set)
-        visited = set()
-        depth_d_plus_one_fringe = set()
-
-        # Iterate through old tree and copy nodes with depth less or equal to new depth
-        for node, parents in old_tree['tree'].items():
-            if node[1] <= depth:
-                prev_dict[node].update(parents)
-                visited.add(node)
-                if node[1] == depth + 1:  # not really useful in this case, but for structure consistency
-                    depth_d_plus_one_fringe.add(node)
-                    fringe_prevs[node].add(parents)
-
-        return {
-            'tree': prev_dict,
-            'visited': visited,
-            'depth': depth,
-            'fringe': fringe,
-            'fringe_prevs': fringe_prevs,
-            'depth_d_plus_one_fringe': depth_d_plus_one_fringe
-        }
+    # def trim_depth_d_bfs_tree(self, my_map, start, depth, old_tree):
+    #     fringe = deque()
+    #     old_fringe = list(old_tree['fringe'])
+    #     old_fringe.sort(key=lambda x: x[0][0] + x[0][1])
+    #
+    #     # Include nodes at the desired depth or less
+    #     fringe.extend(old_tree['tree'][node] for node in old_fringe)
+    #
+    #     visited = old_tree['visited']
+    #     tree = old_tree['tree']
+    #     [tree.pop(node) for node in old_fringe]
+    #     print()
+    #     return {
+    #         'tree': tree,
+    #         'visited': visited,
+    #         'depth': depth,
+    #         'fringe': fringe,
+    #         'fringe_prevs': old_tree['fringe'],
+    #     }
 
     def main_bfs_loop(self, my_map, start, depth, fringe, prev_dict, visited):
         depth_d_plus_one_fringe = set()
@@ -150,7 +147,7 @@ class MDD:
 
 # ========== Non-Class Functions Below ========== 
 
-def is_solution_in_joint_mdd(mdds_list, stat_tracker, return_solution = False):
+def is_solution_in_joint_mdd(mdds_list, stat_tracker, start_time, time_limit, return_solution = False):
     for mdd in mdds_list:
         if not mdd.mdd:
             return False
@@ -166,15 +163,15 @@ def is_solution_in_joint_mdd(mdds_list, stat_tracker, return_solution = False):
         found_path, visited = joint_mdd_dfs(mdds_list, (roots_key, 0), max(depths), visited)
         return found_path
     # else == return_solution
-    solution, visited = joint_mdd_dfs_return_solution(mdds_list, None, (roots_key, 0), max(depths), visited)
+    solution, visited = joint_mdd_dfs_return_solution(mdds_list, None, (roots_key, 0), max(depths), visited, start_time, time_limit)
     if not 'max_joint_mdd_visited' in stat_tracker.stats:
         stat_tracker.stats['max_joint_mdd_visited'] = len(visited)
     else:
         stat_tracker.stats['max_joint_mdd_visited'] = max(len(visited), stat_tracker.stats['max_joint_mdd_visited'])
     return solution
 
-def find_solution_in_joint_mdd(mdds_list, performance_tracker):
-    solution = is_solution_in_joint_mdd(mdds_list, performance_tracker, True)
+def find_solution_in_joint_mdd(mdds_list, performance_tracker, start_time, time_limit):
+    solution = is_solution_in_joint_mdd(mdds_list, performance_tracker, start_time, time_limit, True)
     return joint_mdd_nodes_to_list_of_paths(solution)
 
 def joint_mdd_dfs(mdds_list, curr, max_depth, visited):
@@ -199,7 +196,9 @@ def joint_mdd_dfs(mdds_list, curr, max_depth, visited):
     
     return False, visited
 
-def joint_mdd_dfs_return_solution(mdds_list, prev, curr, max_depth, visited):
+def joint_mdd_dfs_return_solution(mdds_list, prev, curr, max_depth, visited, start_time, time_limit):
+    if time.time() - start_time > time_limit:
+        return [], visited
     curr_nodes = curr[0]
     curr_depth = curr[1]
     if prev and is_invalid_move(prev, curr_nodes):
@@ -218,7 +217,7 @@ def joint_mdd_dfs_return_solution(mdds_list, prev, curr, max_depth, visited):
         child = (node, curr_depth+1)
         # Finding a solution
         if child not in visited:
-            solution, visited = joint_mdd_dfs_return_solution(mdds_list, curr_nodes, child, max_depth, visited)
+            solution, visited = joint_mdd_dfs_return_solution(mdds_list, curr_nodes, child, max_depth, visited, start_time, time_limit)
             if solution != []:
                 partial_solution.extend(solution)
                 return partial_solution, visited

@@ -1,0 +1,11 @@
+,map,reverse_time,reverse_sum_of_costs,regular_time,regular_sum_of_costs
+0,custom_mazes/custom_maze_10.txt,0.7785577774047852,32,2.0369582176208496,False
+1,custom_mazes/custom_maze_49.txt,30.05445098876953,False,4308.5033078193665,False
+2,custom_mazes/custom_maze_45.txt,27.212909698486328,False,2840.6887016296387,False
+3,custom_mazes/custom_maze_40.txt,16.925844192504883,False,1599.4512207508087,False
+4,custom_mazes/custom_maze_35.txt,9.977772951126099,False,836.0031952857971,False
+5,custom_mazes/custom_maze_30.txt,5.441918134689331,False,394.80474758148193,False
+6,custom_mazes/custom_maze_25.txt,2.6334187984466553,False,163.66275930404663,False
+7,custom_mazes/custom_maze_20.txt,29.200511932373047,72,55.89196300506592,False
+8,custom_mazes/custom_maze_15.txt,6.05876898765564,52,13.95928168296814,False
+9,custom_mazes/custom_maze_05.txt,0.014388561248779297,12,0.08752155303955078,False

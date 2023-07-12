@@ -17,7 +17,7 @@ class ReverseIncreasingCostTree:
 
         self.open_list = collections.deque()
         self.open_list.append(self.root)
-        self.closed_list = set(initial_cost)
+        self.closed_list = set()
         self.max_depth = 0
 
     def get_open_list(self):

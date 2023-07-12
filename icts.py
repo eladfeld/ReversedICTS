@@ -1,12 +1,14 @@
 from single_agent_planner import compute_heuristics, a_star
 from ict import IncreasingCostTree
-from mdd import MDD, find_solution_in_joint_mdd
+from mdd import MDD, find_solution_in_joint_mdd, is_solution_in_joint_mdd
 from map_utils import find_number_of_open_spaces
 from performance_tracker import PerformanceTracker
 import collections
 import time as timer
 import numpy as np
-
+import itertools
+import time
+max_time = 60*30
 class ICTSSolver(object):
     """A high-level ICTS search."""
 
@@ -20,7 +22,6 @@ class ICTSSolver(object):
         self.starts = map_details.starting_loc
         self.goals = map_details.goal_loc
         self.num_of_agents = len(map_details.goal_loc)
-
         self.stat_tracker = PerformanceTracker("ICTS")
         self.stat_tracker.set_map_name(map_details.name)
         self.stat_tracker.set_results_file_name(map_details.result_file_name)
@@ -33,7 +34,7 @@ class ICTSSolver(object):
 
         self.ict = self.stat_tracker.time("time", lambda: self.create_ict())
         self.upper_bound = self.calculate_upper_bound_cost()
-
+        self.possible_pairs = {}
     def calculate_heuristics(self):
         h = [dict() for g in range(len(self.goals))]
         for x, row in enumerate(self.my_map):
@@ -69,7 +70,7 @@ class ICTSSolver(object):
     def find_solution(self):
         """ Finds paths for all agents from their start locations to their goal locations
         """
-        print("\nFinding ICTS Solution...")
+        #print("\nFinding ICTS Solution...")
         ######### Fill in the ICTS Algorithm here #########
         result = self.stat_tracker.time("time", lambda: self.bfs())
         if result == -1:
@@ -93,20 +94,22 @@ class ICTSSolver(object):
         while(len(open_list) != 0):
             current_node = ict.get_next_node_to_expand()
             node_cost = current_node.get_cost()
-            if timer.time() - start_time > 60:
+            if timer.time() - start_time > max_time:
                 return -1
             self.print_sanity_track(start_time, nodes_expanded)
             if not self.node_has_exceeded_upper_bound(current_node, self.upper_bound):
                 solution_paths = self.find_paths_for_agents_for_given_cost(node_cost, mdd_cache)
                 if(self.solution_exists(solution_paths)):
-                    print('node costs:', node_cost)
-                    print('node cost sums:', np.sum(node_cost))
+                    #print('exists')
+                    #print('node costs:', node_cost)
+                    #print('node cost sums:', np.sum(node_cost))
                     return solution_paths
                 else:
                     self.stat_tracker.count('expanded nodes', lambda: ict.expand_next_node())
                     self.stat_tracker.record_max('max_open_list_length', len(open_list))
                     nodes_expanded += 1
             ict.pop_next_node_to_expand()
+            #print(sum(node_cost))
         return []
 
     def node_has_exceeded_upper_bound(self, node, upper_bound):
@@ -121,6 +124,7 @@ class ICTSSolver(object):
     def find_paths_for_agents_for_given_cost(self, agent_path_costs, mdd_cache):
         mdds = []
         for i in range(len(agent_path_costs)):
+            paths_time = timer.time()
             agent_depth_key = (i, agent_path_costs[i])
             if agent_depth_key not in mdd_cache:
                 agent_prev_depth_key = (i, agent_path_costs[i]-1)
@@ -134,8 +138,15 @@ class ICTSSolver(object):
             else: # Already cached
                 new_mdd = mdd_cache[agent_depth_key]
             mdds.append(new_mdd)
+        for pair in itertools.combinations([mdd.agent for mdd in mdds], 2):
+            pair = tuple(sorted(pair))
+            pair = ((agent, agent_path_costs[agent]) for agent in pair)
+            if pair not in self.possible_pairs:
+                self.possible_pairs[pair] = is_solution_in_joint_mdd([mdds[agent] for agent, cost in pair], self.stat_tracker, time.time(), max_time)
+            if not self.possible_pairs[pair]:
+                return None
         t1 = timer.time()
-        solution_path = find_solution_in_joint_mdd(mdds, self.stat_tracker)
+        solution_path = find_solution_in_joint_mdd(mdds, self.stat_tracker, time.time(), max_time)
         t2 = timer.time()
         return solution_path
 
